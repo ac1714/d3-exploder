@@ -14,7 +14,7 @@
 
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script src="http://d3js.org/topojson.v1.min.js"></script>
-  <script src="https://raw.githubusercontent.com/bsouthga/d3-exploder/master/explode.js"></script>
+  <script src="https://cdn.rawgit.com/bsouthga/d3-exploder/master/explode.js"></script>
   <script>
     var width = 960,
         height = 500,
@@ -26,7 +26,7 @@
         .attr("width", width)
         .attr("height", height);
     var g = svg.append("g");
-    d3.json("https://github.com/bsouthga/d3-exploder/blob/master/examples/us.json", function(error, us) {
+    d3.json("https://cdn.rawgit.com/bsouthga/d3-exploder/master/examples/us.json", function(error, us) {
       var state_features = topojson.feature(us, us.objects.states).features;
       var scale = d3.scale.linear()
                     .domain([0, state_features.length])
