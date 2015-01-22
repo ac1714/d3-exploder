@@ -11,110 +11,360 @@
       text-align: center;
     }
 
+    h1,h2,h3,h4,h5 {
+      font-weight: normal;
+    }
+
+    h1:not(#title) {
+      border-bottom: 1px solid #ccc;
+      margin-top: 50px;
+    }
+
+    a {
+      color: #000;
+      text-decoration: underline;
+    }
+
     #states path {
-      fill : #aaa;
+      fill : #000;
       stroke : #fff;
     }
     #states path:hover {
-      fill: orange;
+      fill: red;
     }
 
     #map {
       width : 960px;
       height: 500px;
+      margin-left: -180px;
+      display: block;
+    }
+
+    #buttons {
+      width : 400px;
       margin: 0 auto;
       display: block;
+      text-align: center;
+    }
+
+    h1 pre {
+      text-align: center;
+    }
+    
+    #bomb {
+      width: 100%;
+      text-align: center;
+      display: block;
+    }
+
+    #content {
+      width: 600px;
+      display: block;
+      text-align: left;
+      margin: 50px auto;
+      margin-bottom: 100px;
+    }
+
+    #footer {
+      width : 100%;
+      display: block;
+      text-align: center;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+      font-size: 12px;
     }
 
   </style>
 
 </head>
 <body>
-  <h1>d3 Exploder</h1>
-  
-  <button id="reset">Reset</button>
-  <button id="shuffle">Random Grid</button>
-  <button id="circle">circle</button>
-  <button id="figure8">figure 8</button>
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
 
-  <div id="map"></div>
+  <a href="https://github.com/bsouthga/d3-exploder"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://camo.githubusercontent.com/567c3a48d796e2fc06ea80409cc9dd82bf714434/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"></a>
+
+  <div id="content">
+
+    <a href="https://github.com/bsouthga/d3-exploder" id="bomb"><img src="bomb7.svg" alt="view on github"/></a>
+    <h1 id="title"><pre>d3.geo.exploder</pre></h1>
+
+    <div id="buttons"></div>
+    <div id="map"></div>
+
+    <h1>What is this?</h1>
+
+    <p>
+      This is a tiny (0.8KB-ish) d3 extension that lets you easily move and resize geographic features rendered with d3 and topojson.
+    </p>
+
+    <h1>Why would I want this?</h1>
+
+    <p>
+      Say you have a map of the US (like above) and you want to gratuitously transition the map into a scatter plot where the states are the points. This will let you do that. To see this in action, click the "scatter" button above.
+    </p>
+
+    <h1>How can I use this?</h1>
+
+    First, include a copy of d3, topojson, and a <a href="https://raw.githubusercontent.com/bsouthga/d3-exploder/master/explode.min.js">copy of explode.js</a>...
+
+  <pre>
+    <code class="html">
+&lt;script src=&quot;http://d3js.org/d3.v3.min.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;http://d3js.org/topojson.v1.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;explode.min.js&quot;&gt;&lt;/script&gt;
+    </code>
+  </pre>
+
+  Next, create a map with some geographic features... and then create an exploder function and call it!
+
+  <pre>
+    <code class="javascript">
+var width = 960,
+    height = 500;
+
+var projection = d3.geo.albersUsa().scale(width);
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var svg = d3.select("#map").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var g = svg.append("g");
+
+
+d3.json("us.json", function(error, us) {
+
+  var state_features = topojson.feature(
+    us, us.objects.states
+  ).features;
+
+  var states = g.append("g")
+      .attr("id", "states")
+    .selectAll("path")
+      .data(state_features)
+    .enter().append("path")
+      .attr("d", path);
+
+
+  // Here is the magic!
+  // This exploder will create a grid of the states
+  // when called on a featurelist selection
+  var explode = d3.geo.explode()
+                  // use the same projection as the map
+                  .projection(projection)
+                  // provide a function to determine the size
+                  // of each feature when called
+                  .size(function(d, i) { return 40; })
+                  // provide a function to determine the
+                  // new (grid) positions of the features
+                  // -> returns an [x, y] array (in pixels)
+                  .position(function(d, i) {
+                    var px = Math.max(0, width - 9*60)/2
+                    return [px + (i%10)*60, 70 + Math.floor(i/10)*60];
+                  })
+  //
+  // transition to the grid
+  //
+  states
+    .transition()
+    .duration()
+    .call(explode);
+
+});
+    </code>
+  </pre>
+
+  <div id="footer">2015 | <a href="http://bsou.io">Ben Southgate</a></div>
+
+  </div>
+
 
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script src="http://d3js.org/topojson.v1.min.js"></script>
-  <script src="https://cdn.rawgit.com/bsouthga/d3-exploder/master/explode.js"></script>
+  <script src="explode.js"></script>
   <script>
+
     var width = 960,
         height = 500,
-        centered;
+        centered,
+        animation;
+
     var projection = d3.geo.albersUsa().scale(width);
+
     var path = d3.geo.path()
         .projection(projection);
+
     var svg = d3.select("#map").append("svg")
         .attr("width", width)
         .attr("height", height);
+
     var g = svg.append("g");
+
+
     d3.json("https://cdn.rawgit.com/bsouthga/d3-exploder/master/examples/us.json", function(error, us) {
+
       var state_features = topojson.feature(us, us.objects.states).features;
+
+      var feature_domain = [0, state_features.length-1];
+
       var scale = d3.scale.linear()
-                    .domain([0, state_features.length])
-                    .range([0, 360]);
+                    .domain(feature_domain)
+                    .range([0, Math.PI*2]);
+
       var states = g.append("g")
           .attr("id", "states")
         .selectAll("path")
           .data(state_features)
         .enter().append("path")
           .attr("d", path);
+
+      var default_size = function(d, i) { return 40; };
       var explode = d3.geo.explode()
                       .projection(projection)
-                      .size(function(d, i) { return 40; });
-      d3.select("#shuffle").on('click', function() {
+                      .size(default_size);
+
+
+
+      function addButton(text, callback) {
+        d3.select("#buttons").append('button')
+          .text(text)
+          .on('click', function() {
+            // clear running animation
+            animation = clearTimeout(animation);
+            // reset to default size
+            explode.size(default_size);
+            callback.call(this);
+          })
+      }
+
+      // --------------------------
+      //
+      // randomly ordered grid
+      //
+      // --------------------------
+      addButton('random grid', function() {
         var rand = d3.shuffle(d3.range(state_features.length));
         states.transition()
               .duration(500)
               .call(
                 explode.position(function(d, index) {
                   var i = rand[index];
-                  return [120 + (i%10)*60, 40 + Math.floor(i/10)*60];
+                  var px = Math.max(0, width - 9*60)/2
+                  return [px + (i%10)*60, 70 + Math.floor(i/10)*60];
                 })
               );
       });
-      d3.select("#reset").on('click', function() {
+
+
+      // --------------------------
+      //
+      // Circle Plot
+      //
+      // --------------------------
+      function circle(d, i) {
+        var t = scale(i);
+        var r = (height/2)*.8;
+        var x = width/2 + r*Math.cos(t);
+        var y = height/2 + r*Math.sin(t);
+        return [x, y];
+      }
+      addButton('circle', function(d, i) {
+        states.transition()
+              .duration(500)
+              .call(explode.position(circle));
+      });
+
+
+      // --------------------------
+      //
+      // Figure 8 plot
+      //
+      // --------------------------
+      function figure8(d, i) {
+        var t = scale(i);
+        var r = (height/2)*.8;
+        var d = (1 + Math.pow(Math.sin(t), 2));
+        var x = width/2 + (r*Math.cos(t)) / d;
+        var y = height/2 + (r*Math.sin(t)*Math.cos(t)) / d;
+        return [x, y];
+      }
+      addButton('figure8', function() {
+        states.transition()
+              .duration(500)
+              .call(explode.position(figure8));
+      });
+
+
+
+      // --------------------------
+      //
+      // animated Figure 8 plot
+      //
+      // --------------------------
+
+      addButton('figure 8 animated', function() {
+        var advance = 1;
+        function tick() {
+          states
+            .transition()
+            .duration(500)
+            .call(explode.position(function(d, i) {
+              return figure8(d, i + advance++);
+            }));
+        }
+        animation = setInterval(tick, 550)
+        tick();
+      });
+
+      // --------------------------
+      //
+      // spiral Plot
+      //
+      // --------------------------
+      var spiral_scale = d3.scale.linear()
+                       .domain(feature_domain)
+                       .range([0, 50000]);
+      var size_scale = d3.scale.linear()
+                        .domain(feature_domain)
+                        .range([10, 100]);
+
+      function spiral(d, i) {
+        var t = spiral_scale(i);
+        var x = width/2 + Math.pow(t, 1/2)*Math.cos(t);
+        var y = height/2 + Math.pow(t, 1/2)*Math.sin(t);
+        return [x, y];
+      }
+      addButton('spiral', function(d, i) {
+        states.transition()
+              .duration(500)
+              .call(
+                explode
+                  .position(spiral)
+                  .size(function(d, i) {
+                    return size_scale(i);
+                  })
+              );
+      });
+
+
+
+
+      // --------------------------
+      //
+      // realign map
+      //
+      // --------------------------
+      addButton('reset', function() {
         states.transition()
               .duration(500)
               .attr("d", path)
               .attr("transform", "translate(0,0)");
       });
-      function circle(t) {
-        var r = height/2;
-        var x = 150 + r + r*0.8*Math.cos(t);
-        var y = r + r*0.8*Math.sin(t);
-        return [x, y];
-      }
-      d3.select('#circle').on('click', function(d, i) {
-        states.transition()
-              .duration(500)
-              .call(
-                explode.position(function(d, i) { 
-                  return circle(scale(i));
-                })
-              );
-      });
-      function figure8(t) {
-        var r = height/2;
-        var d = (1 + Math.pow(Math.sin(t), 2));
-        var x = 150 + r + (r*0.8*Math.cos(t)) / d;
-        var y = r + (r*0.8*Math.sin(t)*Math.cos(t)) / d;
-        return [x, y];
-      }
-      d3.select('#figure8').on('click', function(d, i) {
-        states.transition()
-              .duration(500)
-              .call(
-                explode.position(function(d, i) { 
-                  return figure8(scale(i));
-                })
-              );
-      });
+
+
     });
   </script>
 </body>
