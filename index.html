@@ -74,6 +74,13 @@
       font-size: 12px;
     }
 
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
   </style>
 
 </head>
@@ -105,6 +112,8 @@
     </p>
 
     <h1>How can I use this?</h1>
+  
+    View the source of this page or...
 
     First, include a copy of d3, topojson, and a <a href="https://raw.githubusercontent.com/bsouthga/d3-exploder/master/exploder.min.js">copy of exploder.js</a>...
 
@@ -170,7 +179,7 @@ d3.json("us.json", function(error, us) {
   //
   states
     .transition()
-    .duration()
+    .duration(500)
     .call(exploder);
 
 });
@@ -187,8 +196,9 @@ d3.json("us.json", function(error, us) {
   <script src="exploder.js"></script>
   <script>
 
-    var width = 960,
-        height = 500,
+    var margin = {top: 20, right: 20, bottom: 30, left: 40},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom,
         centered,
         animation;
 
@@ -198,10 +208,12 @@ d3.json("us.json", function(error, us) {
         .projection(projection);
 
     var svg = d3.select("#map").append("svg")
-        .attr("width", width)
-        .attr("height", height);
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    var g = svg.append("g");
+
 
 
     d3.json("https://cdn.rawgit.com/bsouthga/d3-exploder/master/examples/us.json", function(error, us) {
@@ -209,6 +221,45 @@ d3.json("us.json", function(error, us) {
       var state_features = topojson.feature(us, us.objects.states).features;
 
       var feature_domain = [0, state_features.length-1];
+
+      // setup x 
+      var xScale = d3.scale.linear().range([0, width]).domain(feature_domain), // value -> display
+          xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+      // setup y
+      var yScale = d3.scale.linear().range([height, 0]).domain(feature_domain), // value -> display
+          yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+      // x-axis
+      var x_axis_g = svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + (height) + ")")
+          .call(xAxis).style('opacity', 0);
+
+      x_axis_g.append("text")
+          .attr("class", "label")
+          .attr("x", width)
+          .attr("y", -6)
+          .style("text-anchor", "end")
+          .text("Random X variable");
+
+      // y-axis
+      var y_axis_g = svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+          .style('opacity', 0);
+
+      y_axis_g.append("text")
+          .attr("class", "label")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("Random Y variable");
+
+
+      var g = svg.append("g");
+
 
       var scale = d3.scale.linear()
                     .domain(feature_domain)
@@ -234,6 +285,9 @@ d3.json("us.json", function(error, us) {
           .on('click', function() {
             // clear running animation
             animation = clearTimeout(animation);
+            // hide axis
+            x_axis_g.transition().duration(500).style('opacity', 0);
+            y_axis_g.transition().duration(500).style('opacity', 0);
             // reset to default size
             exploder.size(default_size);
             callback.call(this);
@@ -291,20 +345,6 @@ d3.json("us.json", function(error, us) {
         var y = height/2 + (r*Math.sin(t)*Math.cos(t)) / d;
         return [x, y];
       }
-      addButton('figure8', function() {
-        states.transition()
-              .duration(500)
-              .call(exploder.position(figure8));
-      });
-
-
-
-      // --------------------------
-      //
-      // animated Figure 8 plot
-      //
-      // --------------------------
-
       addButton('figure 8 animated', function() {
         var advance = 1;
         function tick() {
@@ -318,6 +358,8 @@ d3.json("us.json", function(error, us) {
         animation = setInterval(tick, 550)
         tick();
       });
+
+
 
       // --------------------------
       //
@@ -349,6 +391,31 @@ d3.json("us.json", function(error, us) {
               );
       });
 
+
+
+      // --------------------------
+      //
+      // Scatter Plot
+      //
+      // --------------------------
+      addButton('scatter', function(d, i) {
+
+
+        // hide axis
+        x_axis_g.transition().duration(500).style('opacity', 1);
+        y_axis_g.transition().duration(500).style('opacity', 1);
+
+        states.transition()
+              .duration(500)
+              .call(
+                exploder.position(function(d, i) {
+                  var x = xScale(i) + (-0.5 + Math.random())*70;
+                  var y = yScale(i) + (-0.5 + Math.random())*70;
+                  return [x, y];
+                })
+              );
+
+      });
 
 
 
