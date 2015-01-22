@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>d3-exploder</title>
+  <title>d3.geo.exploder</title>
 
   <style>
 
@@ -106,13 +106,13 @@
 
     <h1>How can I use this?</h1>
 
-    First, include a copy of d3, topojson, and a <a href="https://raw.githubusercontent.com/bsouthga/d3-exploder/master/explode.min.js">copy of explode.js</a>...
+    First, include a copy of d3, topojson, and a <a href="https://raw.githubusercontent.com/bsouthga/d3-exploder/master/exploder.min.js">copy of exploder.js</a>...
 
   <pre>
     <code class="html">
 &lt;script src=&quot;http://d3js.org/d3.v3.min.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
 &lt;script src=&quot;http://d3js.org/topojson.v1.min.js&quot;&gt;&lt;/script&gt;
-&lt;script src=&quot;explode.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;exploder.min.js&quot;&gt;&lt;/script&gt;
     </code>
   </pre>
 
@@ -152,7 +152,7 @@ d3.json("us.json", function(error, us) {
   // Here is the magic!
   // This exploder will create a grid of the states
   // when called on a featurelist selection
-  var explode = d3.geo.explode()
+  var exploder = d3.geo.exploder()
                   // use the same projection as the map
                   .projection(projection)
                   // provide a function to determine the size
@@ -171,7 +171,7 @@ d3.json("us.json", function(error, us) {
   states
     .transition()
     .duration()
-    .call(explode);
+    .call(exploder);
 
 });
     </code>
@@ -184,7 +184,7 @@ d3.json("us.json", function(error, us) {
 
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script src="http://d3js.org/topojson.v1.min.js"></script>
-  <script src="explode.js"></script>
+  <script src="exploder.js"></script>
   <script>
 
     var width = 960,
@@ -222,7 +222,7 @@ d3.json("us.json", function(error, us) {
           .attr("d", path);
 
       var default_size = function(d, i) { return 40; };
-      var explode = d3.geo.explode()
+      var exploder = d3.geo.exploder()
                       .projection(projection)
                       .size(default_size);
 
@@ -235,7 +235,7 @@ d3.json("us.json", function(error, us) {
             // clear running animation
             animation = clearTimeout(animation);
             // reset to default size
-            explode.size(default_size);
+            exploder.size(default_size);
             callback.call(this);
           })
       }
@@ -250,7 +250,7 @@ d3.json("us.json", function(error, us) {
         states.transition()
               .duration(500)
               .call(
-                explode.position(function(d, index) {
+                exploder.position(function(d, index) {
                   var i = rand[index];
                   var px = Math.max(0, width - 9*60)/2
                   return [px + (i%10)*60, 70 + Math.floor(i/10)*60];
@@ -274,7 +274,7 @@ d3.json("us.json", function(error, us) {
       addButton('circle', function(d, i) {
         states.transition()
               .duration(500)
-              .call(explode.position(circle));
+              .call(exploder.position(circle));
       });
 
 
@@ -294,7 +294,7 @@ d3.json("us.json", function(error, us) {
       addButton('figure8', function() {
         states.transition()
               .duration(500)
-              .call(explode.position(figure8));
+              .call(exploder.position(figure8));
       });
 
 
@@ -311,7 +311,7 @@ d3.json("us.json", function(error, us) {
           states
             .transition()
             .duration(500)
-            .call(explode.position(function(d, i) {
+            .call(exploder.position(function(d, i) {
               return figure8(d, i + advance++);
             }));
         }
@@ -341,7 +341,7 @@ d3.json("us.json", function(error, us) {
         states.transition()
               .duration(500)
               .call(
-                explode
+                exploder
                   .position(spiral)
                   .size(function(d, i) {
                     return size_scale(i);
