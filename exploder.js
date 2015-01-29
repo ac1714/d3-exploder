@@ -23,31 +23,39 @@
   THE SOFTWARE.
 */
 
-;(function(d3) {
+(function(d3) {
 
-d3.geo.exploder = function exploder() {
 
+function exploder() {
+
+  // attributes / methods for explode
+  var methods = ["size", "position", "projection"],
+      path = d3.geo.path();
+
+  // explode selection
   function explode(selection) {
+
     // check for necessary parameters
-    ["size", "position", "projection"].forEach(function(option) {
+    methods.forEach(function(option) {
       if (!config[option]) {
         throw "exploder.js: " + option + " not provided to exploder.";
       }
     });
+
     // local references to configuration
     var projection = config.projection,
         size = config.size,
         position = config.position,
         scale = projection.scale(),
-        path = d3.geo.path().projection(projection),
         cache = {};
-    // acount for sizes given as numbers
-    size = typeof size === "function" ? size : function(){return size;};
-    // move features based on configuration
+
+    // update projection of path function
+    path.projection(projection);
+
+    // the order of the attribute changes matters!
+    // setting 'd' caches the new scale which is used
+    // in the transform change
     selection
-      // the order of the attribute changes matters!
-      // setting 'd' caches the new scale which is used
-      // in the transform change
       .attr('d', function(d, i) {
         // compute size based on user functions
         var sz = size(d, i);
@@ -58,43 +66,44 @@ d3.geo.exploder = function exploder() {
             h = bounds[1][1] - bounds[0][1],
             sc = cache[i] = Math.min(sz / h, sz / w);
         // scale projection to desired size
-        // and calculate new centroid to translate to
         path.projection(projection.scale(scale*sc));
         // return scaled path
         return path(d);
       })
-      // calculate new transform after finding scale
       .attr("transform", function(d, i) {
-        // compute size and positionment based on user functions
-        var A = position(d, i),
-            δx = A[0],
-            δy = A[1];
-        // scale projection to desired size
-        // and calculate new centroid to translate to
+        // update projection with cached scale
         path.projection(projection.scale(scale*cache[i]));
-        var coords = path.centroid(d),
-            cx = coords[0],
-            cy = coords[1];
+        var C = path.centroid(d),
+            A = position(d, i);
         // return desired coordinates offset by centroid
-        return "translate(" + [δx - cx, δy - cy] + ")";
+        return "translate(" + [A[0] - C[0], A[1] - C[1]] + ")";
     });
+
     // reset scale for projection
     projection.scale(scale);
   }
 
   // create getters / setters
   var config = {};
-  ["size", "position", "projection"].forEach(function(option) {
+  methods.forEach(function(option) {
     config[option] = null;
     explode[option] = function(value) {
       if (!arguments.length) return config[option];
+      if (!(value instanceof Function)) {
+        throw "exploder.js: " + option + " needs to be a function.";
+      }
       config[option] = value;
       return explode;
     };
   });
+
   // return configurable exploder function
   return explode;
-};
+}
 
-d3.geo.exploder.version = "1.0.2";
+
+// semantic version
+exploder.version = "1.0.4";
+d3.geo.exploder = exploder;
+
 })(d3);
