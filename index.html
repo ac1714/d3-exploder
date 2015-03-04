@@ -216,7 +216,7 @@ d3.json("us.json", function(error, us) {
 
 
 
-    d3.json("https://cdn.rawgit.com/bsouthga/d3-exploder/master/examples/us.json", function(error, us) {
+    d3.json("us.json", function(error, us) {
 
       var state_features = topojson.feature(us, us.objects.states).features;
 
